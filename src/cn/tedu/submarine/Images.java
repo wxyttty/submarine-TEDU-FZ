@@ -14,7 +14,7 @@ public class Images {
     public static ImageIcon cover;
     public static ImageIcon gameover;
     public static ImageIcon start;
-    public static ImageIcon fired;
+    public static ImageIcon laser;
 
     static{ //初始化静态图片
         battleship = new ImageIcon("img/battleship.png");
@@ -29,7 +29,7 @@ public class Images {
         cover = new ImageIcon("img/cover.png");
         gameover = new ImageIcon("img/gameover.png");
         start = new ImageIcon("img/start.png");
-        fired = new ImageIcon("img/fired.png");
+        laser = new ImageIcon("img/laser.png");
     }
 
     public static void main(String[] args) {

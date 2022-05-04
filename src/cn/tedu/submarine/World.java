@@ -6,8 +6,7 @@ import java.applet.AudioClip;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -22,7 +21,7 @@ public class World extends JPanel { //2.
     AudioClip bombMusic;
     public static final int WIDTH = 641;  //窗口的宽
     public static final int HEIGHT = 479; //窗口的高
-    private static final int START = 0
+    private static final int START = 0;
 
     public static final int RUNNING = 1;   //运行状态
     public static final int GAME_OVER = -1; //游戏结束状态
@@ -238,6 +237,25 @@ public class World extends JPanel { //2.
                     }
                 }
             }
+            //炸弹和boss之间的关系
+            for (int j = 0; j < bosses.length; j++) {
+                if (b.isLive() && b.isHit(bosses[j]) && bosses[j].isLive()){
+                    BOSS boss = bosses[j];
+                    boss.lostLife();
+                    boss.bossDead();
+                    System.out.println(boss.getBlood());
+                    b.goDead();
+                    if ((boss instanceof EnemyLife) && (boss instanceof EnemyScore)
+                            && boss.isDead()
+                    ){
+                        if (ship.getLife()<5)
+                            ship.addLife(boss.getLife());
+
+                        score += boss.getScore();
+
+                    }
+                }
+            }
         }
     }
 
@@ -250,15 +268,159 @@ public class World extends JPanel { //2.
                 ship.subtractLife(); //战舰减命
             }
         }
+        //boss炸弹炸战舰
+        for (int i = 0; i < lasers.length; i++) {
+            Laser laser = lasers[i];
+            if (laser.isLive() && laser.isHit(ship)){
+                laser.goDead();
+                ship.subtractLife();
+                laser.lostScore();
+            }
+        }
+    }
+    public void bombBangAction2(){ //每10毫秒走一次
+        for(int i=0;i<bombs2.length;i++){ //遍历所有炸弹
+            Bomb b = bombs2[i]; //获取每个炸弹
+            for(int j=0;j<submarines.length;j++){ //遍历所有潜艇
+                SeaObject s = submarines[j]; //获取每个潜艇
+                if(b.isLive() && s.isLive() && s.isHit(b)){ //若都活着，并且还撞上了
+                    s.goDead(); //潜艇去死
+                    b.goDead(); //炸弹去死
+
+                    if(s instanceof EnemyScore){ //若被撞潜艇为分
+                        EnemyScore es = (EnemyScore)s; //将被撞潜艇强转为得分接口
+                        score += es.getScore(); //玩家得分
+                    }
+                    if(s instanceof EnemyLife){ //若被撞潜艇为命
+                        EnemyLife el = (EnemyLife)s; //将被撞潜艇强转为得命接口
+                        int num = el.getLife(); //获取命数
+                        ship2.addLife(num); //战舰增命
+                    }
+                }
+            }
+            //炸弹和boss之间的关系
+            for (int j = 0; j < bosses.length; j++) {
+                if (b.isLive() && b.isHit(bosses[j]) && bosses[j].isLive()){
+                    BOSS boss = bosses[j];
+                    boss.lostLife();
+                    boss.bossDead();
+                    System.out.println(boss.getBlood());
+                    b.goDead();
+                    if ((boss instanceof EnemyLife) && (boss instanceof EnemyScore)
+                            && boss.isDead()
+                    ){
+                        if (ship2.getLife()<5)
+                            ship2.addLife(boss.getLife());
+
+                        score += boss.getScore();
+
+                    }
+                }
+            }
+        }
     }
 
+    /** 水雷与战舰的碰撞 */
+    public void mineBangAction2(){ //每10毫秒走一次
+        for(int i=0;i<mines.length;i++) { //遍历所有水雷
+            Mine m = mines[i]; //获取每一个水雷
+            if (m.isLive() && ship2.isLive() && m.isHit(ship2)) { //若都活着并且还撞上了
+                m.goDead(); //水雷去死
+                ship2.subtractLife(); //战舰减命
+            }
+        }
+        //boss炸弹炸战舰
+        for (int i = 0; i < lasers.length; i++) {
+            Laser laser = lasers[i];
+            if (laser.isLive() && laser.isHit(ship2)){
+                laser.goDead();
+                ship2.subtractLife();
+                laser.lostScore();
+            }
+        }
+    }
+    //删除战舰二号
+    public void delete(){
+        if (ship2!=null && ship2.getLife()<=0){
+            ship2 = null;
+        }
+    }
+
+    //一键清屏
+    public void clear(){
+        submarines = new SeaObject[0];
+        mines = new Mine[0];
+        bosses = new BOSS[0];
+        lasers = new Laser[0];
+    }
+    //雷与保护罩碰撞
+    public void hitCover(){
+        if (null!=cover && cover.isLive()){
+            //保护罩被雷后，状态为死
+            for (int i = 0; i < mines.length; i++) {
+                if (mines[i].isHit(cover)){
+                    cover.goDead();
+                    mines[i].goDead();
+                }
+            }
+            //保护罩被boss雷后，状态为死
+            for (int i = 0; i < lasers.length; i++) {
+                if (lasers[i].isHit(cover)) {
+                    cover.goDead();
+                    lasers[i].goDead();
+                }
+            }
+
+
+        }
+        //把保护罩对象删除
+        if (null != cover && cover.isDead())
+            cover = null;
+    }
     /** 检测游戏结束 */
     public void checkGameOverAction(){ //每10毫秒走一次
         if(ship.getLife()<=0){ //若战舰的命数<=0，表示游戏结束了
             state = GAME_OVER; //则将当前状态修改为游戏结束状态
+            bgm.stop();
         }
     }
+    public void writeScore(){
+        try {
+            FileOutputStream fos = new FileOutputStream("score.txt",true);
+            OutputStreamWriter osw = new OutputStreamWriter(fos);
+            BufferedWriter bw = new BufferedWriter(osw);
+            PrintWriter pw = new PrintWriter(bw);
+            if (score>readScore()) {
+                pw.println(score);
+            }
+            pw.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public int readScore() throws IOException {
+        FileInputStream fis = null;
+        int[] max ;
+        fis = new FileInputStream("./score.txt");
+        InputStreamReader isr = new InputStreamReader(fis);
+        BufferedReader br = new BufferedReader(isr);
 
+        String line;
+        max = new int[0];
+        while ((line = br.readLine()) != null) {
+            max = Arrays.copyOf(max, max.length + 1);
+            if (!line.equals(""))
+                max[max.length - 1] = Integer.parseInt(line);
+        }
+        br.close();
+        if (max.length == 0) {
+            return 0;
+        } else {
+            return max[max.length - 1];
+        }
+    }
     /** 启动程序的执行 */
     public void action(){
         KeyAdapter k = new KeyAdapter() {  //--不要求掌握
@@ -276,9 +438,9 @@ public class World extends JPanel { //2.
                         case GAME_OVER:
 
                             score = 0;
-                            ship = new BattleShip(170);
+                            ship = new Battleship(170);
                             submarines = new SeaObject[0];
-                            thunders = new SeaObject[0];
+                            mines = new Mine[0];
                             bombs = new Bomb[0];
                             bombs2 = new Bomb[0];
                             state = START;
@@ -330,10 +492,16 @@ public class World extends JPanel { //2.
                 submarineEnterAction(); //潜艇(侦察潜艇、鱼雷潜艇、水雷潜艇)入场
                 mineEnterAction();      //水雷入场
                 moveAction();           //海洋对象移动
+                BossEnterAction();
+                LasersEnterAction();
                 outOfBoundsAction();    //删除越界海洋对象
+                delete();
                 bombBangAction();       //深水炸弹与潜艇的碰撞
                 mineBangAction();       //水雷与战舰的碰撞
+                bombBangAction2();       //深水炸弹与潜艇的碰撞
+                mineBangAction2();       //水雷与战舰的碰撞
                 checkGameOverAction();  //检测游戏结束
+                writeScore();
                 repaint();              //重画(重新调用paint()方法)-----不要求掌握
             }
         }, interval, interval); //定时计划表
