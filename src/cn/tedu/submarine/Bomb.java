@@ -12,6 +12,15 @@ public class Bomb extends SeaObject {
         y += speed; //y+(向下)
     }
 
+    public void moveLeft(){
+        y += speed;
+        x -= speed;
+    }
+    public void moveRight(){
+        y += speed;
+        x += speed;
+    }
+
     /** 重写getImage()获取图片 */
     public ImageIcon getImage(){
         return Images.bomb; //返回深水炸弹图片
@@ -19,7 +28,7 @@ public class Bomb extends SeaObject {
 
     /** 重写isOutOfBounds()检测潜艇越界 */
     public boolean isOutOfBounds(){
-        return this.y>=World.HEIGHT; //深水炸弹的y>=窗口的高，即为越界了
+        return this.y>=World.HEIGHT || this.x>=World.WIDTH ||this.x<=0-this.width; //深水炸弹越界了
     }
 }
 

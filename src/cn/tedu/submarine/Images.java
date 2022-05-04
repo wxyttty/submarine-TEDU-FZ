@@ -10,17 +10,26 @@ public class Images {
     public static ImageIcon mine;       //水雷图
     public static ImageIcon bomb;       //深水炸弹图
     public static ImageIcon sea;        //海洋图
-    public static ImageIcon gameover;   //游戏结束图
+    public static ImageIcon boss;
+    public static ImageIcon cover;
+    public static ImageIcon gameover;
+    public static ImageIcon start;
+    public static ImageIcon fired;
 
     static{ //初始化静态图片
         battleship = new ImageIcon("img/battleship.png");
         obsersubm = new ImageIcon("img/obsersubm.png");
         torpesubm = new ImageIcon("img/torpesubm.png");
         minesubm = new ImageIcon("img/minesubm.png");
-        mine = new ImageIcon("img/mine.png");
         bomb = new ImageIcon("img/bomb.png");
+        torpesubm = new ImageIcon("img/torpesubm.png");
+        mine = new ImageIcon("img/mine.png");
         sea = new ImageIcon("img/sea.png");
+        boss = new ImageIcon("img/boss.png");
+        cover = new ImageIcon("img/cover.png");
         gameover = new ImageIcon("img/gameover.png");
+        start = new ImageIcon("img/start.png");
+        fired = new ImageIcon("img/fired.png");
     }
 
     public static void main(String[] args) {
@@ -31,7 +40,10 @@ public class Images {
         System.out.println(mine.getImageLoadStatus());
         System.out.println(bomb.getImageLoadStatus());
         System.out.println(sea.getImageLoadStatus());
+        System.out.println(start.getImageLoadStatus());
         System.out.println(gameover.getImageLoadStatus());
+        System.out.println(boss.getImageLoadStatus());
+        System.out.println(fired.getImageLoadStatus());
     }
 
 }

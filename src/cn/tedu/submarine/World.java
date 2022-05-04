@@ -1,7 +1,14 @@
 package cn.tedu.submarine;
 import javax.swing.JFrame;
 import javax.swing.JPanel; //1.
-import java.awt.Graphics;
+import java.applet.Applet;
+import java.applet.AudioClip;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Random;
@@ -11,19 +18,35 @@ import java.awt.event.KeyEvent;
 
 /** 整个游戏世界 */
 public class World extends JPanel { //2.
+    AudioClip bgm;
+    AudioClip bombMusic;
     public static final int WIDTH = 641;  //窗口的宽
     public static final int HEIGHT = 479; //窗口的高
+    private static final int START = 0
 
-    public static final int RUNNING = 0;   //运行状态
-    public static final int GAME_OVER = 1; //游戏结束状态
-    private int state = RUNNING; //当前状态(默认为启动状态)
+    public static final int RUNNING = 1;   //运行状态
+    public static final int GAME_OVER = -1; //游戏结束状态
+    private int state = START; //当前状态(默认为启动状态)
 
     //如下这一堆就是窗口中所显示的对象
     private Battleship ship = new Battleship(); //战舰
+    private Battleship ship2 = new Battleship(); //战舰2
     private SeaObject[] submarines = {}; //潜艇(侦察潜艇、鱼雷潜艇、水雷潜艇)数组
     private Mine[] mines = {}; //水雷数组
     private Bomb[] bombs = {}; //深水炸弹数组
-
+    private Bomb[] bombs2 = {};
+    private Cover cover;
+    private BOSS[] bosses={};
+    private Laser[] lasers={};
+    
+    public World(){
+        try {
+            bgm = Applet.newAudioClip(new File("./src/music/music.wav").toURI().toURL());
+            bombMusic = Applet.newAudioClip(new File("./src/music/bombMusic.wav").toURI().toURL());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+    }
     /** 生成潜艇(侦察潜艇、鱼雷潜艇、水雷潜艇)对象 */
     public SeaObject nextSubmarine(){
         Random rand = new Random(); //随机数对象
@@ -36,7 +59,29 @@ public class World extends JPanel { //2.
             return new MineSubmarine();
         }
     }
+    
+    //Boss进场
+    private int bossEnterIndex = 400;
+    public void BossEnterAction(){
+        if (score>=bossEnterIndex){
+            bossEnterIndex += 400;
+            bosses = Arrays.copyOf(bosses,bosses.length+1);
+            bosses[bosses.length-1] = new BOSS();
 
+        }
+    }
+    //boss炸弹进场
+    private int LasersEnterIndex = 0;
+    public void LasersEnterAction(){
+        LasersEnterIndex++;
+        if (LasersEnterIndex%100==0){
+            for (int i = 0; i < bosses.length; i++) {
+                Laser laser = bosses[i].shootLaser1();
+                lasers = Arrays.copyOf(lasers,lasers.length+1);
+                lasers[lasers.length-1] = laser;
+            }
+        }
+    }
     private int subEnterIndex = 0; //潜艇入场计数
     /** 潜艇(侦察潜艇、鱼雷潜艇、水雷潜艇)入场 */
     public void submarineEnterAction(){ //每10毫秒走一次
@@ -63,7 +108,31 @@ public class World extends JPanel { //2.
             }
         }
     }
+    //炸弹入场
+    public void bombEnterAction(){
+        //单个炸弹
+        /* Bomb object = ship.shootBomb();
+        bombs = Arrays.copyOf(bombs,bombs.length+1);
+        bombs[bombs.length-1] = object;*/
+        //三个炸弹
+        Bomb[] bomb = ship.shootBomb();
+        bombs = Arrays.copyOf(bombs,bombs.length+bomb.length);
+        System.arraycopy(bomb,0,bombs,bombs.length-bomb.length,bomb.length);
 
+    }
+
+    //二号机炸弹入场
+    public void bombEnterAction2(){
+        //单个炸弹
+        /* Bomb object = ship.shootBomb();
+        bombs = Arrays.copyOf(bombs,bombs.length+1);
+        bombs[bombs.length-1] = object;*/
+        //三个炸弹
+        Bomb[] bomb = ship2.shootBomb();
+        bombs2 = Arrays.copyOf(bombs2,bombs2.length+bomb.length);
+        System.arraycopy(bomb,0,bombs2,bombs2.length-bomb.length,bomb.length);
+
+    }
     /** 海洋对象移动 */
     public void moveAction(){ //每10毫秒走一次
         for(int i=0;i<submarines.length;i++){ //遍历所有潜艇
@@ -72,8 +141,30 @@ public class World extends JPanel { //2.
         for(int i=0;i<mines.length;i++){ //遍历所有水雷
             mines[i].move(); //水雷移动
         }
-        for(int i=0;i<bombs.length;i++){ //遍历所有深水炸弹
-            bombs[i].move(); //深水炸弹动
+        for (int i = 0; i < bosses.length; i++) {
+            bosses[i].move();
+        }
+        for (int i = 0; i < lasers.length; i++) {
+            lasers[i].move();
+        }
+        for (int i = 0; i < bombs.length; i++) {
+            if (i%3==0){
+                bombs[i].move();
+            }else if (i%3==1){
+                bombs[i].moveLeft();
+            }else {
+                bombs[i].moveRight();
+            }
+        }
+        //第二架战机炸弹方法
+        for (int i = 0; i < bombs2.length; i++) {
+            if (i%3==0){
+                bombs2[i].move();
+            }else if (i%3==1){
+                bombs2[i].moveLeft();
+            }else {
+                bombs2[i].moveRight();
+            }
         }
     }
 
@@ -97,6 +188,30 @@ public class World extends JPanel { //2.
             if(bombs[i].isOutOfBounds() || bombs[i].isDead()){ //若越界了或者死了的
                 bombs[i] = bombs[bombs.length-1]; //修改越界元素为最后一个元素
                 bombs = Arrays.copyOf(bombs,bombs.length-1); //缩容
+            }
+        }
+
+        //删除越界的二号炸弹
+        for (int i = 0; i < bombs2.length; i+=3) {
+            if (bombs2[i].isOutOfBounds() || bombs2[i].isDead()){
+                bombs2[i] = bombs2[bombs2.length-3];
+                bombs2[i+1] = bombs2[bombs2.length-2];
+                bombs2[i+2] = bombs2[bombs2.length-1];
+                bombs2 = Arrays.copyOf(bombs2,bombs2.length-3);
+            }
+        }
+        //删除死亡的的boss
+        for (int i = 0; i < bosses.length; i++) {
+            if (bosses[i].isDead() ){
+                bosses[i] = bosses[bosses.length-1];
+                bosses = Arrays.copyOf(bosses,bosses.length-1);
+            }
+        }
+        //删除越界的boss炸弹
+        for (int i = 0; i < lasers.length; i++) {
+            if (lasers[i].isDead() || lasers[i].isOutOfBounds()){
+                lasers[i] = lasers[lasers.length-1];
+                lasers = Arrays.copyOf(lasers,lasers.length-1);
             }
         }
     }
@@ -149,20 +264,64 @@ public class World extends JPanel { //2.
         KeyAdapter k = new KeyAdapter() {  //--不要求掌握
             /** 重写keyReleased()按键抬起事件 */
             public void keyReleased(KeyEvent e) { //当按键抬起时会自动执行--不要求掌握
-                if(e.getKeyCode()==KeyEvent.VK_SPACE){ //不要求掌握--若按键是空格键
-                    Bomb obj = ship.shootBomb(); //获取深水炸弹对象
-                    bombs = Arrays.copyOf(bombs,bombs.length+1); //扩容
-                    bombs[bombs.length-1] = obj; //将obj添加到bombs的最后一个元素上
+                if (e.getKeyCode() == KeyEvent.VK_SPACE){
+                    switch (state){
+                        case START:
+                            state = RUNNING;
+                            bgm.play();
+                            break;
+                        case RUNNING:
+                            bombEnterAction();
+                            break;
+                        case GAME_OVER:
+
+                            score = 0;
+                            ship = new BattleShip(170);
+                            submarines = new SeaObject[0];
+                            thunders = new SeaObject[0];
+                            bombs = new Bomb[0];
+                            bombs2 = new Bomb[0];
+                            state = START;
+                    }
                 }
                 if(e.getKeyCode()==KeyEvent.VK_LEFT){ //不要求掌握--若按键是左键头
                     ship.moveLeft();
+                    if (null!=cover)
+                        cover.x = ship.x;
                 }
                 if(e.getKeyCode()==KeyEvent.VK_RIGHT){ //不要求掌握--若按键是右键头
                     ship.moveRight();
+                    if (null!=cover)
+                        cover.x = ship.x;
+                }
+                if (e.getKeyCode() == KeyEvent.VK_Q && state==RUNNING){
+                    clear();
+                }
+                if (e.getKeyCode() == KeyEvent.VK_W && state==RUNNING){
+                    if (null==cover)
+                        cover = ship.creatCover();
                 }
             }
         }; //键盘适配器
         this.addKeyListener(k); //添加侦听--不要求掌握
+
+        MouseAdapter mouse = new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (ship2 != null){
+                    bombEnterAction2();
+                }
+            }
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                if (state==RUNNING && ship2!=null){
+                    int x = e.getX();
+                    ship2.move2(x);
+                }
+            }
+        };
+        this.addMouseListener(mouse);       //鼠标点击发射
+        this.addMouseMotionListener(mouse); //跟随鼠标移动
 
         Timer timer = new Timer(); //定时器对象
         int interval = 10; //定时间隔(以毫秒为单位)
@@ -183,23 +342,64 @@ public class World extends JPanel { //2.
     /** 重写paint()画 g:画笔-----------不要求掌握 */
     public void paint(Graphics g){ //每10毫秒走一次
         switch (state){ //根据当前状态做不同的处理
+            case START:
+                Images.start.paintIcon(null,g,0,0);
+                break;
             case GAME_OVER: //游戏结束状态时，画游戏结束图
                 Images.gameover.paintIcon(null,g,0,0); //画游戏结束图
                 break;
             case RUNNING: //运行状态时
                 Images.sea.paintIcon(null,g,0,0); //画海洋图
                 ship.paintImage(g); //画战舰
-                for(int i=0;i<submarines.length;i++){ //遍历所有潜艇
-                    submarines[i].paintImage(g); //画潜艇
+
+                if (cover!=null)
+                    cover.paintImage(g);
+
+                if (ship2!=null)
+                    ship2.paintImage(g);
+
+                for (int i = 0; i < submarines.length ; i++) {
+                    submarines[i].paintImage(g);
                 }
-                for(int i=0;i<mines.length;i++){ //遍历所有水雷
-                    mines[i].paintImage(g); //画水雷
+                for (int i = 0; i < bosses.length ; i++) {
+                    bosses[i].paintImage(g);
                 }
-                for(int i=0;i<bombs.length;i++){ //遍历所有深水炸弹
-                    bombs[i].paintImage(g); //画深水炸弹
+                for (int i = 0; i < lasers.length ; i++) {
+                    lasers[i].paintImage(g);
+                }
+                for (int i = 0; i < mines.length ; i++) {
+                    mines[i].paintImage(g);
+                }
+                for (int i = 0; i < bombs.length ; i++) {
+                    bombs[i].paintImage(g);
+                }
+                for (int i = 0; i < bombs2.length ; i++) {
+                    bombs2[i].paintImage(g);
                 }
                 g.drawString("SCORE: "+score,200,50); //不要求掌握
                 g.drawString("LIFE: "+ship.getLife(),400,50); //不要求掌握
+                //最高分
+                try {
+                    g.drawString("最高分: "+readScore(),400,100);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                //战舰的血条
+                g.draw3DRect(100, 30, 100, 10, true);
+                g.setColor(Color.red);
+                g.fill3DRect(100, 30, ship.getLife() * 20, 10, true);
+                if (ship2!=null){
+                    g.draw3DRect(100, 30, 100, 10, true);
+                    g.setColor(Color.red);
+                    g.fill3DRect(380, 30, ship2.getLife() * 20, 10, true);
+                }
+                //boss的血条
+                for (int i = 0; i < bosses.length; i++) {
+                    g.draw3DRect(bosses[i].x, bosses[i].y-15, 100, 10, true);
+                    g.setColor(Color.green);
+                    g.fill3DRect(bosses[i].x, bosses[i].y-15, bosses[i].getBlood() * 5, 10, true);
+                }
+                break;
         }
     }
 
