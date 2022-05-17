@@ -11,10 +11,6 @@ public class Cover extends SeaObject{
 
     }
     public ImageIcon getImage(){
-        if (this.isLive()){
-            return Images.cover;
-        }else {
-            return null;
-        }
+        return Images.cover;
     }
 }

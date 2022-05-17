@@ -29,7 +29,7 @@ public class World extends JPanel { //2.
 
     //如下这一堆就是窗口中所显示的对象
     private Battleship ship = new Battleship(); //战舰
-    private Battleship ship2 = new Battleship(); //战舰2
+    private Battleship ship2; //战舰2
     private SeaObject[] submarines = {}; //潜艇(侦察潜艇、鱼雷潜艇、水雷潜艇)数组
     private Mine[] mines = {}; //水雷数组
     private Bomb[] bombs = {}; //深水炸弹数组
@@ -75,9 +75,9 @@ public class World extends JPanel { //2.
         LasersEnterIndex++;
         if (LasersEnterIndex%100==0){
             for (int i = 0; i < bosses.length; i++) {
-                Laser laser = bosses[i].shootLaser1();
-                lasers = Arrays.copyOf(lasers,lasers.length+1);
-                lasers[lasers.length-1] = laser;
+                Laser[] las = bosses[i].shootLaser();
+                lasers = Arrays.copyOf(lasers,lasers.length+las.length);
+                System.arraycopy(las,0,lasers,lasers.length-las.length,las.length);
             }
         }
     }
@@ -144,7 +144,13 @@ public class World extends JPanel { //2.
             bosses[i].move();
         }
         for (int i = 0; i < lasers.length; i++) {
-            lasers[i].move();
+            if(i%3==0){
+                lasers[i].move();
+            }else if (i%3==1){
+                lasers[i].moveLeft();
+            }else {
+                lasers[i].moveRight();
+            }
         }
         for (int i = 0; i < bombs.length; i++) {
             if (i%3==0){
@@ -155,7 +161,7 @@ public class World extends JPanel { //2.
                 bombs[i].moveRight();
             }
         }
-        //第二架战机炸弹方法
+        //第二架炸弹方法
         for (int i = 0; i < bombs2.length; i++) {
             if (i%3==0){
                 bombs2[i].move();
@@ -438,7 +444,7 @@ public class World extends JPanel { //2.
                         case GAME_OVER:
 
                             score = 0;
-                            ship = new Battleship(170);
+                            ship = new Battleship();
                             submarines = new SeaObject[0];
                             mines = new Mine[0];
                             bombs = new Bomb[0];
@@ -455,6 +461,9 @@ public class World extends JPanel { //2.
                     ship.moveRight();
                     if (null!=cover)
                         cover.x = ship.x;
+                }
+                if (e.getKeyCode() == KeyEvent.VK_2 && state==RUNNING){
+                    ship2 = new Battleship();
                 }
                 if (e.getKeyCode() == KeyEvent.VK_Q && state==RUNNING){
                     clear();
@@ -498,8 +507,11 @@ public class World extends JPanel { //2.
                 delete();
                 bombBangAction();       //深水炸弹与潜艇的碰撞
                 mineBangAction();       //水雷与战舰的碰撞
-                bombBangAction2();       //深水炸弹与潜艇的碰撞
-                mineBangAction2();       //水雷与战舰的碰撞
+                if(ship2!=null){
+                    bombBangAction2();       //深水炸弹与潜艇的碰撞
+                    mineBangAction2();       //水雷与战舰的碰撞
+                }
+                hitCover();
                 checkGameOverAction();  //检测游戏结束
                 writeScore();
                 repaint();              //重画(重新调用paint()方法)-----不要求掌握
@@ -544,8 +556,11 @@ public class World extends JPanel { //2.
                 for (int i = 0; i < bombs2.length ; i++) {
                     bombs2[i].paintImage(g);
                 }
-                g.drawString("SCORE: "+score,200,50); //不要求掌握
-                g.drawString("LIFE: "+ship.getLife(),400,50); //不要求掌握
+                g.drawString("SCORE: "+score,150,100); //不要求掌握
+                g.drawString("LIFE1: "+ship.getLife(),150,50); //不要求掌握
+                if(ship2!=null) {
+                    g.drawString("LIFE2: "+ship2.getLife(),400,50); //不要求掌握
+                }
                 //最高分
                 try {
                     g.drawString("最高分: "+readScore(),400,100);

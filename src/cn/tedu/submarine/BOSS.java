@@ -5,9 +5,11 @@ import java.awt.*;
 
 public class BOSS extends SeaObject implements EnemyLife,EnemyScore{
     private int blood;
-    public BOSS(int width, int height, int x, int y, int speed) {
-        super(width, height, x, y, 3);
+    public BOSS() {
+        super(100, 50);
         blood = 20;
+        speed = 3;
+        y = 350;
     }
 
     @Override
@@ -44,23 +46,14 @@ public class BOSS extends SeaObject implements EnemyLife,EnemyScore{
             state = DEAD;
     }
 
-    public Laser shootLaser1(){
-        int x = this.x+this.width/2; //x:水雷潜艇的x+水雷潜艇的宽
-        int y = this.y-5;          //y:水雷潜艇的y-固定的5
-        return new Laser1(x,y); //返回水雷对象
+    public Laser[] shootLaser(){
+        Laser[] l = new Laser[3];
+        l[0] = new Laser(this.x,this.y);
+        l[1] = new Laser(this.x,this.y);
+        l[2] = new Laser(this.x,this.y);
+        return l;
     }
 
-    public Laser shootLaser2(){
-        int x = this.x+; //x:水雷潜艇的x+水雷潜艇的宽
-        int y = this.y-5;          //y:水雷潜艇的y-固定的5
-        return new Laser2(x,y); //返回水雷对象
-    }
-
-    public Laser shootLaser3(){
-        int x = this.x+this.width; //x:水雷潜艇的x+水雷潜艇的宽
-        int y = this.y-5;          //y:水雷潜艇的y-固定的5
-        return new Laser3(x,y); //返回水雷对象
-    }
 
     @Override
     public ImageIcon getImage() {

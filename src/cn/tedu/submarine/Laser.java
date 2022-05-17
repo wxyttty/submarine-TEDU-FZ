@@ -2,10 +2,24 @@ package cn.tedu.submarine;
 
 import javax.swing.*;
 
-public abstract class Laser extends SeaObject{
+public class Laser extends SeaObject{
 
     public Laser(int x,int y){
         super(15,15,x,y,2);
+    }
+
+    @Override
+    public void move() {
+        y -= speed;
+    }
+
+    public void moveLeft(){
+        y += speed;
+        x -= speed;
+    }
+    public void moveRight(){
+        y += speed;
+        x += speed;
     }
     public int lostScore() {
         return -30;
@@ -16,6 +30,6 @@ public abstract class Laser extends SeaObject{
     }
 
     public boolean isOutOfBounds(){
-        return y<=150-height; //水雷的y<=150-水雷的高，即为越界了
+        return y<=150-height|| this.x>=World.WIDTH ||this.x<=0-this.width; //水雷的y<=150-水雷的高，即为越界了
     }
 }

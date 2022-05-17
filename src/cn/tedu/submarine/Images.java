@@ -22,7 +22,6 @@ public class Images {
         torpesubm = new ImageIcon("img/torpesubm.png");
         minesubm = new ImageIcon("img/minesubm.png");
         bomb = new ImageIcon("img/bomb.png");
-        torpesubm = new ImageIcon("img/torpesubm.png");
         mine = new ImageIcon("img/mine.png");
         sea = new ImageIcon("img/sea.png");
         boss = new ImageIcon("img/boss.png");
@@ -43,7 +42,7 @@ public class Images {
         System.out.println(start.getImageLoadStatus());
         System.out.println(gameover.getImageLoadStatus());
         System.out.println(boss.getImageLoadStatus());
-        System.out.println(fired.getImageLoadStatus());
+        System.out.println(laser.getImageLoadStatus());
     }
 
 }
